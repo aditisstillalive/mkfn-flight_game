@@ -46,7 +46,7 @@ export function createCargoSystem(scene) {
       crates.push(crate);
       return crate;
     },
-    update(dt) {
+    update(dt, wind = null) {
       const landed = [];
       for (const crate of crates) {
         if (crate.landed) continue;
@@ -57,7 +57,12 @@ export function createCargoSystem(scene) {
         const speed = crate.vel.length();
         crate.vel.y -= 9.81 * dt;
         crate.vel.addScaledVector(crate.vel, -Math.min(1, drag * speed * 0.05 * dt) );
-        if (open) crate.vel.x *= Math.max(0, 1 - dt * 0.8), crate.vel.z *= Math.max(0, 1 - dt * 0.8);
+        if (open) {
+          // under the canopy the crate drifts with the breeze
+          const k = Math.min(1, dt * 0.8);
+          crate.vel.x += ((wind ? wind.x : 0) - crate.vel.x) * k;
+          crate.vel.z += ((wind ? wind.z : 0) - crate.vel.z) * k;
+        }
         crate.pos.addScaledVector(crate.vel, dt);
         if (!open) crate.group.rotation.set(crate.spin.x * crate.age * 3, crate.spin.y * crate.age * 3, 0);
         else crate.group.rotation.x *= Math.max(0, 1 - dt * 3), crate.group.rotation.z *= Math.max(0, 1 - dt * 3);

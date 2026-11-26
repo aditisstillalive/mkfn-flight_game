@@ -21,11 +21,11 @@ export function buildWorld(scene) {
   const map = paintMap(512);
   return {
     map,
-    update(camera, focus, dt) {
+    update(camera, focus, dt, wind) {
       sky.position.copy(camera.position);
       lights.follow(focus);
       water.update(dt);
-      airfields.update(camera.position);
+      airfields.update(camera.position, wind);
     },
   };
 }

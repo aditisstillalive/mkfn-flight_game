@@ -38,6 +38,7 @@ export const MISSIONS = [
     tagline: 'Eleven gates round the isle, then land at home',
     brief: 'Thread every gate in order on a lap of Halden and Mount Orrin, then put her down on Halden Field. Gold under 5:30, silver under 7:00. Keep your speed up through the turns, but watch the g-meter.',
     start: { x: -1450, y: 160, z: 5000, heading: 352, speed: 52, throttle: 0.7, fuel: 120, flaps: 0 },
+    wind: { from: 300, speed: 4 },
     medals: [330, 420, 600],
   },
   {
@@ -46,6 +47,7 @@ export const MISSIONS = [
     tagline: 'Short fuel, high strip, no second chances',
     brief: 'The ridge post office on Corrie needs its mailbags. You have 52 litres: enough if you fly lean, not if you race. Climb to clear the ridge, then land on the 620 m gravel strip at 780 ft and stop.',
     start: runwayStart('halden', 52),
+    wind: { from: 290, speed: 5.5 },
   },
   {
     id: 'drop',
@@ -54,6 +56,7 @@ export const MISSIONS = [
     brief: 'Fly low and slow over each smoking drop zone and press Space to release a crate. The closer it lands to the centre, the better. You carry one spare. Then land at Halden Field.',
     start: { x: -1000, y: 140, z: 4300, heading: 330, speed: 48, throttle: 0.55, fuel: 110, flaps: 0 },
     crates: 4,
+    wind: { from: 200, speed: 3.5 },
     targets: LANDMARKS.dropZones,
   },
   {
@@ -62,6 +65,7 @@ export const MISSIONS = [
     tagline: 'The whole archipelago, no clock',
     brief: 'Full tanks and the isles to yourself. Land at any strip to refuel; Halden Field’s crew fix any damage. Find the lighthouse on Tarn Rock.',
     start: runwayStart('halden', AIRCRAFT.fuelCapacity),
+    wind: { from: 270, speed: 4.5 },
   },
 ];
 
@@ -134,8 +138,9 @@ export function createMissionRun(def, scene, cargo) {
     const strip = parked ? runwayAt(state.pos.x, state.pos.z) : null;
     run.servicing = '';
     if (strip && def.id === 'free') {
-      if (state.fuel < AIRCRAFT.fuelCapacity) { state.fuel = Math.min(AIRCRAFT.fuelCapacity, state.fuel + RULES.refuelRate * dt); run.servicing = 'REFUELLING'; }
-      if (strip.home && state.damage > 0) { state.damage = Math.max(0, state.damage - RULES.repairRate * dt); run.servicing = 'REPAIRING'; }
+      if (state.fuel < AIRCRAFT.fuelCapacity - 1) run.servicing = `Refuelling at ${strip.name}`;
+      state.fuel = Math.min(AIRCRAFT.fuelCapacity, state.fuel + RULES.refuelRate * dt);
+      if (strip.home && state.damage > 0.005) { state.damage = Math.max(0, state.damage - RULES.repairRate * dt); run.servicing = 'Hangar crew repairing the airframe'; }
       if (!state.engineOn && state.fuel > 5) state.engineOn = true;
     }
     if (course) {
@@ -166,7 +171,7 @@ export function createMissionRun(def, scene, cargo) {
     }
     if (zones) {
       zones.update(time);
-      for (const crate of cargo.update(dt)) {
+      for (const crate of cargo.update(dt, state.wind)) {
         let best = null;
         let bestD = Infinity;
         for (const zone of zones.zones) {

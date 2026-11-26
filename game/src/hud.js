@@ -183,6 +183,26 @@ export function createHud(canvas, mapCanvas) {
     glowText(ctx, 'N', x + size / 2, y + 15, '#ffffff', 13, 'center');
   }
 
+  /** Wind from, its speed, and an arrow showing where it blows relative to the nose. */
+  function windGauge(x, y, state) {
+    const w = state.wind;
+    const speed = Math.hypot(w.x, w.z);
+    box(ctx, x - 4, y, 178, 34, 0.5);
+    if (speed < 0.3) { glowText(ctx, 'WIND CALM', x + 85, y + 23, AMBER, 13, 'center'); return; }
+    const from = ((Math.atan2(-w.x, w.z) * 180 / Math.PI) + 360) % 360;
+    glowText(ctx, `WIND ${String(Math.round(from)).padStart(3, '0')}° ${Math.round(speed * UNITS.knots)} KT`, x + 8, y + 23, AMBER, 13);
+    const rel = (Math.atan2(w.x, -w.z) - state.heading * Math.PI / 180);
+    ctx.save();
+    ctx.translate(x + 150, y + 17);
+    ctx.rotate(rel);
+    ctx.strokeStyle = '#ffffff';
+    ctx.fillStyle = '#ffffff';
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(0, 10); ctx.lineTo(0, -8); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0, -12); ctx.lineTo(-5, -4); ctx.lineTo(5, -4); ctx.closePath(); ctx.fill();
+    ctx.restore();
+  }
+
   function warnings(state, time) {
     const list = [];
     if (state.stallWarning) list.push(['STALL', '#ff4a3a']);
@@ -232,7 +252,8 @@ export function createHud(canvas, mapCanvas) {
         glowText(ctx, `FUEL ${Math.round(state.fuel)} L (${fuelPct}%)   AIRFRAME ${Math.round((1 - state.damage) * 100)}%`, 30, 85, state.damage > 0.5 || fuelPct < 12 ? '#ff8a6a' : GREEN, 12);
       }
       minimap(W - 186, 14, 170, state, target);
-      if (mouseYoke) glowText(ctx, 'MOUSE YOKE', W - 101, 205, GREEN, 12, 'center');
+      windGauge(W - 186, 192, state);
+      if (mouseYoke) glowText(ctx, 'MOUSE YOKE', W - 101, 246, GREEN, 12, 'center');
       if (view !== 'cockpit' && panel) {
         const pw = Math.min(W * 0.66, 1000);
         const ph = pw * PANEL_HEIGHT / PANEL_WIDTH;

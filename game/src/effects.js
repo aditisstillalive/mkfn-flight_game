@@ -39,6 +39,11 @@ export function createEffects(scene) {
         spawn({ pos: tip, vel: state.vel.clone().multiplyScalar(0.85), colour: '#ffffff', size: 0.35, grow: 0.8, life: 0.5, opacity: 0.4 });
       }
     },
+    /** Oily smoke streaming from the cowling once the engine has been hurt. */
+    engineSmoke(state) {
+      const nose = new THREE.Vector3(0, 0.3, -2.4).applyQuaternion(state.quat).add(state.pos);
+      spawn({ pos: nose, vel: state.vel.clone().multiplyScalar(0.3).add(new THREE.Vector3(0, 1.5, 0)), colour: state.damage > 0.7 ? '#222222' : '#6a6a6a', size: 0.5, grow: 2.5, life: 2.2, opacity: 0.5 });
+    },
     /** Fireball, debris smoke and a column that keeps rising from the wreck. */
     crash(pos, inWater) {
       for (let i = 0; i < 18; i += 1) {

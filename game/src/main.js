@@ -6,7 +6,7 @@ import * as THREE from 'three';
 import { STEP, AIRCRAFT } from './config.js';
 import { buildWorld } from './world.js';
 import { buildAircraft } from './aircraft-model.js';
-import { createFlightState, stepFlight } from './flight-model.js';
+import { createFlightState, stepFlight, setWind } from './flight-model.js';
 import { createInput } from './input.js';
 import { createCameraRig } from './camera-rig.js';
 import { createInstrumentPanel } from './instruments.js';
@@ -43,6 +43,7 @@ function startState(def) {
   const state = createFlightState({ position: new THREE.Vector3(s.x, y, s.z), headingDeg: s.heading, speed: s.speed, fuel: s.fuel, throttle: s.throttle });
   state.onGround = s.speed === 0;
   state.flaps = s.flaps || 0;
+  if (def.wind) setWind(state, def.wind.from, def.wind.speed);
   return state;
 }
 
@@ -98,6 +99,7 @@ function boot() {
     menus.hideAll();
     game.mode = 'flying';
     hud.toast(def.title, '#ffcf7a', 3);
+    hud.toast(def.start.speed > 0 ? 'C camera · F flaps · P pause' : 'Shift or 0 for power · S to rotate at 50 kt', '#ffffff', 5);
     status.textContent = `${def.title}. ${def.brief}`;
   }
 
@@ -161,6 +163,7 @@ function boot() {
     state.events.length = 0;
     if (game.run.ringIndex > ringsBefore) { audio.gate(); hud.toast(`Gate ${game.run.ringIndex} ✓`, '#9dffb0', 1.4); }
     if (state.gLoad > 3.6 && Math.random() < 0.6) effects.vapour(state);
+    if (state.damage > 0.4 && !state.crashed && Math.random() < state.damage * 0.5) effects.engineSmoke(state);
     if (game.run.status !== 'flying' && !game.endAt) {
       game.endAt = game.time + (game.run.status === 'won' ? 2.5 : 3.5);
       if (game.run.status === 'won') audio.success();
@@ -188,7 +191,7 @@ function boot() {
     if (state.crashed) aircraft.root.visible = false;
     else aircraft.root.visible = true;
     rig.update(state, input.look, dt);
-    world.update(camera, state.pos, dt);
+    world.update(camera, state.pos, dt, state.wind);
     effects.update(dt);
     const flying = game.mode !== 'menu';
     if (flying) {

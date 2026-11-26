@@ -131,7 +131,7 @@ function buildWindsock() {
   pole.position.y = 3.5;
   group.add(pole);
   const sock = new THREE.Mesh(new THREE.ConeGeometry(0.7, 4, 10, 1, true), new THREE.MeshLambertMaterial({ color: '#ff7a1a', side: THREE.DoubleSide }));
-  sock.rotation.z = Math.PI / 2;
+  sock.rotation.z = -Math.PI / 2;   // open mouth at the pole, tip streaming downwind along +X
   sock.position.set(2.1, 6.6, 0);
   group.add(sock);
   return group;
@@ -203,6 +203,7 @@ export function buildAirfields() {
   const root = new THREE.Group();
   root.name = 'airfields';
   const papis = [];
+  const socks = [];
   const local = new THREE.Vector3();
   for (const field of AIRFIELDS) {
     const group = new THREE.Group();
@@ -240,12 +241,20 @@ export function buildAirfields() {
     const sock = buildWindsock();
     sock.position.set(-field.width / 2 - 30, 0, -field.length * 0.3);
     group.add(sock);
+    socks.push({ sock, field });
     root.add(group);
   }
   return {
     root,
-    /** Turns each PAPI lamp red or white from where the viewer is. */
-    update(viewer) {
+    /** Turns each PAPI lamp red or white from where the viewer is, and swings the windsocks. */
+    update(viewer, wind) {
+      if (wind && wind.lengthSq() > 0.01) {
+        const downwind = Math.atan2(wind.x, -wind.z);   // world heading the breeze blows toward
+        for (const { sock, field } of socks) {
+          sock.rotation.y = -(downwind - field.heading * RAD) + Math.PI / 2;
+          sock.children[1].rotation.z = -Math.PI / 2 - Math.max(0, 0.5 - wind.length() * 0.06);
+        }
+      }
       for (const papi of papis) {
         local.copy(viewer);
         papi.group.worldToLocal(local);

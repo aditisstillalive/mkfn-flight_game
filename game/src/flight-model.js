@@ -23,7 +23,7 @@ const HARD_POINTS = [
 const tmp = {
   fwd: new THREE.Vector3(), up: new THREE.Vector3(), right: new THREE.Vector3(),
   vdir: new THREE.Vector3(), lift: new THREE.Vector3(), force: new THREE.Vector3(),
-  normal: new THREE.Vector3(), p: new THREE.Vector3(), dq: new THREE.Quaternion(),
+  normal: new THREE.Vector3(), p: new THREE.Vector3(), dq: new THREE.Quaternion(), air: new THREE.Vector3(),
   axis: new THREE.Vector3(),
 };
 
@@ -38,6 +38,7 @@ export function createFlightState({ position, headingDeg = 0, speed = 0, fuel = 
     alpha: 0, airspeed: speed, groundSpeed: speed, verticalSpeed: 0, gLoad: 1, stalled: false, stallWarning: false,
     heading: headingDeg, pitch: 0, bank: 0, altitude: position.y, agl: 0,
     lastTouchdown: null, events: [], time: 0, maxG: 1,
+    wind: new THREE.Vector3(), windBase: new THREE.Vector3(),
   };
 }
 
@@ -86,6 +87,21 @@ function touchdown(state, sink, normal) {
   emit(state, 'touchdown', state.lastTouchdown);
 }
 
+/** Sets a steady breeze blowing FROM `fromDeg` at `speed` m/s; stepFlight adds gusts on top. */
+export function setWind(state, fromDeg, speed) {
+  const a = fromDeg * Math.PI / 180;
+  state.windBase.set(-Math.sin(a), 0, Math.cos(a)).multiplyScalar(speed);
+  state.wind.copy(state.windBase);
+}
+
+/** Gusts: the breeze swells and eases, stronger aloft and calmer near the ground. */
+function updateWind(state, groundH) {
+  const t = state.time;
+  const gust = 1 + 0.22 * Math.sin(t * 0.63) + 0.14 * Math.sin(t * 1.71 + 1.3) + 0.08 * Math.sin(t * 3.9);
+  const shear = 0.65 + 0.35 * Math.min(1, Math.max(0, state.pos.y - groundH) / 120);
+  state.wind.copy(state.windBase).multiplyScalar(gust * shear);
+}
+
 /** Advances the aircraft by `dt` seconds under `controls` {pitch, roll, yaw, throttle, brakes, flaps}. */
 export function stepFlight(state, controls, dt) {
   if (state.crashed) return;
@@ -103,7 +119,8 @@ export function stepFlight(state, controls, dt) {
     state.fuel = 0;
     emit(state, 'fuel-out');
   }
-  const speed = state.vel.length();
+  const air = tmp.air.copy(state.vel).sub(state.wind);   // the aircraft flies through the air, not over the ground
+  const speed = air.length();
   const rpmTarget = state.engineOn ? 750 + 1950 * state.throttle : speed * 9;
   state.engineRpm += (rpmTarget - state.engineRpm) * Math.min(1, dt * 1.8);
   if (state.engineOn) state.fuel = Math.max(0, state.fuel - (A.burnIdle + (A.burnFull - A.burnIdle) * state.throttle) * dt);
@@ -112,9 +129,9 @@ export function stepFlight(state, controls, dt) {
   const thrust = A.maxThrust * power * Math.max(0, 1 - speed / A.propSpeedLimit);
 
   // aerodynamics in the body frame
-  const vf = state.vel.dot(fwd);
-  const vu = state.vel.dot(up);
-  const vr = state.vel.dot(right);
+  const vf = air.dot(fwd);
+  const vu = air.dot(up);
+  const vr = air.dot(right);
   const alpha = speed > 1 ? Math.atan2(-vu, Math.max(vf, 0.1)) : 0;
   const beta = speed > 1 ? Math.atan2(vr, Math.max(Math.abs(vf), 0.1)) : 0;
   const q = 0.5 * rho * speed * speed;
@@ -124,7 +141,7 @@ export function stepFlight(state, controls, dt) {
   force.set(0, -A.mass * G, 0).addScaledVector(fwd, thrust);
   let liftMag = 0;
   if (speed > 0.5) {
-    vdir.copy(state.vel).divideScalar(speed);
+    vdir.copy(air).divideScalar(speed);
     lift.crossVectors(right, vdir).normalize();
     liftMag = q * A.wingArea * cl;
     force.addScaledVector(lift, liftMag);
@@ -157,6 +174,7 @@ export function stepFlight(state, controls, dt) {
   if (up.y < 0) state.bank = Math.sign(state.bank || 1) * Math.PI - state.bank;
 
   const groundH = terrainHeight(state.pos.x, state.pos.z);
+  updateWind(state, Math.max(groundH, 0));
   if (state.onGround) {
     terrainNormal(state.pos.x, state.pos.z, normal);
     const slow = 1 - authority;

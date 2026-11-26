@@ -46,7 +46,7 @@ export function buildRingCourse(points) {
     return { ...mesh, center: mesh.group.position.clone(), facing, passedAt: -1 };
   });
   let progress = 0;
-  return {
+  const course = {
     root,
     rings,
     radius: RING_RADIUS,
@@ -78,6 +78,8 @@ export function buildRingCourse(points) {
       });
     },
   };
+  course.update(0);
+  return course;
 }
 
 /** Did the segment from `a` to `b` pass through `ring`? */
@@ -97,7 +99,7 @@ export function buildDropZones(targets) {
   const zones = targets.map((t) => {
     const y = Math.max(terrainHeight(t.x, t.z), 0);
     const group = new THREE.Group();
-    group.position.set(t.x, y + 0.6, t.z);
+    group.position.set(t.x, y + 1.4, t.z);
     for (const [r, colour] of [[30, '#ffffff'], [22, '#ff5a2a'], [14, '#ffffff'], [6, '#ff5a2a']]) {
       const disc = new THREE.Mesh(new THREE.CircleGeometry(r, 36), new THREE.MeshBasicMaterial({ color: colour, polygonOffset: true, polygonOffsetFactor: -6 }));
       disc.rotation.x = -Math.PI / 2;
@@ -105,11 +107,11 @@ export function buildDropZones(targets) {
       group.add(disc);
     }
     const smoke = new THREE.Group();
-    const puff = new THREE.IcosahedronGeometry(1, 0);
-    const smokeMat = new THREE.MeshLambertMaterial({ color: '#ffb48a', emissive: '#7a2a10', transparent: true, opacity: 0.5, flatShading: true, depthWrite: false });
-    for (let i = 0; i < 9; i += 1) {
+    const puff = new THREE.IcosahedronGeometry(1, 1);
+    for (let i = 0; i < 14; i += 1) {
+      const smokeMat = new THREE.MeshLambertMaterial({ color: '#ffd2b8', emissive: '#a04a20', emissiveIntensity: 0.5, transparent: true, opacity: 0.35, depthWrite: false });
       const p = new THREE.Mesh(puff, smokeMat);
-      p.userData.phase = i / 9;
+      p.userData.phase = i / 14;
       smoke.add(p);
     }
     group.add(smoke);
@@ -124,8 +126,9 @@ export function buildDropZones(targets) {
         zone.smoke.visible = !zone.done;
         zone.smoke.children.forEach((p) => {
           const k = (time * 0.12 + p.userData.phase) % 1;
-          p.position.set(k * 14, 2 + k * 55, Math.sin(k * 6 + p.userData.phase * 9) * 3);
-          p.scale.setScalar(1.5 + k * 6);
+          p.position.set(k * 16, 2 + k * 60, Math.sin(k * 6 + p.userData.phase * 9) * 3);
+          p.scale.setScalar(1.8 + k * 7);
+          p.material.opacity = 0.42 * (1 - k);
         });
       }
     },

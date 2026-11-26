@@ -21,6 +21,7 @@ function fly(game, helpers, seconds, goalFn, controls) {
 }
 
 function settle(game, frames = 30) {
+  if (game.run && game.run.course) game.run.course.update(game.time);
   const t0 = performance.now();
   for (let i = 0; i < frames; i += 1) game.render(1 / 60);
   console.log(`settled ${frames} frames in ${Math.round(performance.now() - t0)} ms`);
@@ -57,6 +58,8 @@ const SCENES = {
     Object.assign(game.input.controls, controls);
     game.input.look.yaw = -0.36;
     game.input.look.pitch = 0.1;
+    game.hud.clearToasts();
+    game.hud.toast('Gate 3 \u2713', '#9dffb0', 30);
     game.rig.setView('chase');
     settle(game);
   },
@@ -81,6 +84,7 @@ const SCENES = {
     game.input.controls.flaps = 1;
     game.rig.setView('cockpit');
     game.input.look.pitch = -0.05;
+    game.hud.clearToasts();
     settle(game, 10);
   },
   /** A crate swinging under its canopy toward Oldquay's smoking drop zone as the Pipit climbs away. */
@@ -106,8 +110,10 @@ const SCENES = {
     game.state.events.length = 0;
     Object.assign(game.input.controls, controls);
     game.rig.setView('chase');
-    game.input.look.yaw = Math.PI - 0.45;
-    game.input.look.pitch = -0.3;
+    game.input.look.yaw = Math.PI - 0.62;
+    game.input.look.pitch = -0.4;
+    game.hud.clearToasts();
+    game.hud.toast('Crate away \u00b7 3 left', '#ffcf7a', 30);
     game.run.time = 102;
     game.run.zones.update(game.time);
     settle(game, 30);

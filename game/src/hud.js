@@ -221,6 +221,7 @@ export function createHud(canvas, mapCanvas) {
 
   return {
     resize,
+    clearToasts() { toasts.length = 0; },
     /** Shows a message mid-screen for a few seconds. */
     toast(text, colour = '#ffffff', seconds = 3) {
       toasts.push({ text, colour, until: performance.now() / 1000 + seconds });

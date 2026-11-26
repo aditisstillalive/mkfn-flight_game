@@ -3,16 +3,59 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Block Dodger</title>
-<style>
-  html, body { margin: 0; height: 100%; overflow: hidden; background: #11141b; }
-  #game { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
-  /* Read aloud, never shown: the status line screen readers announce. */
-  #status { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
-</style>
+<title>Kestrel Isles: island-hopping bush flying</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="./styles.css">
+<script type="importmap">{ "imports": { "three": "./vendor/three.min.js" } }</script>
 </head>
 <body>
-<canvas id="game" aria-label="Block Dodger: move the paddle left and right to dodge falling blocks and catch coins"></canvas>
+<canvas id="view" aria-label="Kestrel Isles: fly the Pipit KX-2 over an archipelago"></canvas>
+<canvas id="hud"></canvas>
+
+<section id="menu" class="screen">
+  <header class="title">
+    <h1>Kestrel <em>Isles</em></h1>
+    <p>Island-hopping bush flying in the Pipit KX-2</p>
+  </header>
+  <div class="board">
+    <div class="missions">
+      <h2>Missions</h2>
+      <div id="mission-list"></div>
+    </div>
+    <div class="brief">
+      <h2 id="brief-title"></h2>
+      <p id="brief-text"></p>
+      <p id="brief-facts" class="facts"></p>
+      <button id="fly" class="primary">Fly &#9658;</button>
+      <details>
+        <summary>Controls</summary>
+        <div id="key-help" class="keys"></div>
+      </details>
+    </div>
+  </div>
+  <footer>Mouse wheel throttle · right-drag to look · C changes camera · sound starts on Fly</footer>
+</section>
+
+<section id="pause" class="screen hidden">
+  <div class="card">
+    <h2>Paused</h2>
+    <div class="row"><button id="resume" class="primary">Resume</button><button id="restart">Restart</button><button id="to-menu">Missions</button></div>
+    <div id="pause-keys" class="keys"></div>
+  </div>
+</section>
+
+<section id="debrief" class="screen hidden">
+  <div class="card">
+    <p id="debrief-mission" class="kicker"></p>
+    <h2 id="debrief-title"></h2>
+    <p id="debrief-stars" class="stars"></p>
+    <p id="debrief-message"></p>
+    <div id="debrief-stats" class="stats"></div>
+    <ul id="debrief-log"></ul>
+    <div class="row"><button id="retry" class="primary">Fly again</button><button id="debrief-menu">Missions</button></div>
+  </div>
+</section>
+
 <p id="status" role="status" aria-live="polite"></p>
 <script type="module" src="./src/main.js"></script>
 </body>

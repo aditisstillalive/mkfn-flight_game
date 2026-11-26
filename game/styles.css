@@ -1,0 +1,58 @@
+/* Kestrel Isles: screens and overlays. Warm amber on deep slate, like the Pipit's lit panel. */
+:root {
+  --ink: #fff7ea;
+  --amber: #ffcf7a;
+  --orange: #ff8a2a;
+  --slate: rgba(12, 20, 28, 0.82);
+  --line: rgba(255, 207, 122, 0.35);
+  font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+}
+html, body { margin: 0; height: 100%; overflow: hidden; background: #0d1418; color: var(--ink); }
+#view, #hud { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+#hud { pointer-events: none; }
+body:not(.flying) #hud { visibility: hidden; }
+#status { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+.screen { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 22px; }
+.screen.hidden { display: none; }
+#menu { justify-content: space-between; align-items: flex-start; padding: 30px 0 18px 48px; box-sizing: border-box; background: linear-gradient(180deg, rgba(8,14,20,0.55), rgba(8,14,20,0) 30%, rgba(8,14,20,0) 55%, rgba(8,14,20,0.7)); }
+.title { text-align: left; }
+.title h1 { margin: 0; font-size: 72px; letter-spacing: 6px; text-transform: uppercase; font-weight: 800; color: var(--ink); text-shadow: 0 3px 0 #b9541b, 0 8px 26px rgba(0,0,0,0.55); }
+.title h1 em { font-style: normal; color: var(--amber); }
+.title p { margin: 4px 0 0; font-size: 19px; letter-spacing: 2px; color: #ffe9c6; text-shadow: 0 2px 8px rgba(0,0,0,0.7); }
+.board { display: flex; gap: 14px; align-items: stretch; }
+.missions, .brief, .card { background: var(--slate); border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px; box-shadow: 0 12px 40px rgba(0,0,0,0.4); }
+.missions { width: 340px; }
+.brief { width: 330px; display: flex; flex-direction: column; }
+h2 { margin: 0 0 10px; font-size: 15px; letter-spacing: 3px; text-transform: uppercase; color: var(--amber); }
+.mission { display: flex; align-items: center; gap: 12px; width: 100%; margin: 0 0 8px; padding: 9px 12px; background: rgba(255,255,255,0.04); border: 1px solid transparent; border-radius: 10px; color: var(--ink); text-align: left; cursor: pointer; font: inherit; }
+.mission:hover { background: rgba(255,255,255,0.09); }
+.mission.selected { border-color: var(--orange); background: rgba(255,138,42,0.16); }
+.mission .icon { width: 34px; height: 34px; color: var(--amber); flex: none; }
+.mission .icon svg { width: 100%; height: 100%; }
+.mission b { display: block; font-size: 17px; }
+.mission small { display: block; font-size: 13px; color: #d8cbb6; margin-top: 2px; }
+.brief p { margin: 0 0 10px; line-height: 1.45; font-size: 15px; color: #efe4d2; }
+.facts { display: flex; flex-wrap: wrap; gap: 6px; }
+.facts span { font-size: 12px; padding: 3px 8px; border-radius: 99px; border: 1px solid var(--line); color: var(--amber); }
+button { font: inherit; }
+.primary, .row button { margin-top: auto; padding: 11px 18px; font-size: 18px; font-weight: 700; letter-spacing: 1px; border-radius: 10px; border: 1px solid var(--line); background: rgba(255,255,255,0.06); color: var(--ink); cursor: pointer; }
+.primary { background: linear-gradient(180deg, #ff9d45, #e0661c); border-color: #ffb36a; color: #1d0e02; }
+.primary:hover { filter: brightness(1.08); }
+details { margin-top: 12px; font-size: 13px; }
+summary { cursor: pointer; color: var(--amber); }
+.keys { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 14px; margin-top: 8px; }
+.keys div { display: flex; justify-content: space-between; gap: 8px; font-size: 13px; }
+kbd { font-family: inherit; color: var(--amber); white-space: nowrap; }
+footer { align-self: center; font-size: 13px; color: #d8cbb6; text-shadow: 0 1px 4px #000; }
+.card { min-width: 420px; max-width: 560px; text-align: center; }
+.card .row { display: flex; gap: 10px; justify-content: center; margin: 14px 0 6px; }
+.card .keys { text-align: left; }
+.kicker { margin: 0; font-size: 13px; letter-spacing: 3px; text-transform: uppercase; color: #d8cbb6; }
+#debrief h2 { font-size: 30px; letter-spacing: 2px; color: #9dffb0; }
+#debrief.lost h2 { color: #ff7a6a; }
+.stars { margin: 0; font-size: 34px; color: var(--amber); letter-spacing: 6px; }
+.stats { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 18px; margin: 12px 0; text-align: left; }
+.stats div { display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.08); padding: 3px 0; }
+.stats span { color: #d8cbb6; }
+#debrief-log { text-align: left; font-size: 13px; color: #d8cbb6; margin: 0; padding-left: 18px; }

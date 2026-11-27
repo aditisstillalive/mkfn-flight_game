@@ -1,18 +1,19 @@
 // Takes the entry's screenshots: serves game/, opens each scene listed in shots.json in headless
 // Chromium (Playwright), waits until the page flags the frame ready, and saves a 1280x720 JPEG
 // into screenshots/. Usage: node tools/capture-shots.mjs [scene-name ...] [--out dir]
-// Needs playwright-core and a Chromium; PLAYWRIGHT_CORE points at the package if not installed here.
+// Needs playwright-core installed (locally or on NODE_PATH) and a Chromium (CHROME_PATH if not Playwright's own).
 import { createServer } from 'node:http';
 import { readFileSync, statSync, mkdirSync, writeFileSync } from 'node:fs';
 import { extname, join, resolve } from 'node:path';
-import { fileURLToPath, pathToFileURL } from 'node:url';
+import { fileURLToPath } from 'node:url';
+import { chromium } from 'playwright-core';
 
 const here = fileURLToPath(new URL('..', import.meta.url));
 const args = process.argv.slice(2);
 const outIndex = args.indexOf('--out');
 const outDir = resolve(outIndex >= 0 ? args[outIndex + 1] : join(here, 'screenshots'));
 const only = args.filter((a, i) => !a.startsWith('--') && (outIndex < 0 || i !== outIndex + 1));
-const { chromium } = await import(process.env.PLAYWRIGHT_CORE ? pathToFileURL(process.env.PLAYWRIGHT_CORE).href : 'playwright-core');
+
 
 const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.txt': 'text/plain' };
 const root = join(here, 'game');

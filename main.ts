@@ -12,13 +12,37 @@
 // Outside the grader's container, MAKEFUN_OUTPUT_DIR stands in for /output:
 //   mkdir -p out && MAKEFUN_OUTPUT_DIR=out node main.ts
 
-import { cpSync, existsSync, mkdirSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, readdirSync, statSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildDossier } from './vendor/makefun-game.ts';
 
 const here = fileURLToPath(new URL('.', import.meta.url));
 const out = process.env.MAKEFUN_OUTPUT_DIR ?? '/output';
+
+// Kestrel Isles: check the entry is whole before handing it in, so a missing page or a wrong
+// number of screenshots fails here with a clear message instead of at the gate.
+const gameDir = join(here, 'game');
+const shotsDir = join(here, 'screenshots');
+const problems: string[] = [];
+if (!existsSync(join(gameDir, 'index.html'))) problems.push('game/index.html is missing');
+const shots = existsSync(shotsDir) ? readdirSync(shotsDir).filter((n) => !n.startsWith('.') && /\.(png|jpe?g)$/i.test(n)).sort() : [];
+if (shots.length < 3 || shots.length > 4) problems.push(`screenshots/ must hold 3 or 4 PNG or JPEG images, found ${shots.length}`);
+for (const name of shots) {
+  const bytes = statSync(join(shotsDir, name)).size;
+  if (bytes > 262144) problems.push(`screenshots/${name} is ${bytes} bytes, over the 256 KiB limit`);
+}
+if (problems.length) {
+  console.error(`Kestrel Isles: not handing in:\n  - ${problems.join('\n  - ')}`);
+  process.exit(1);
+}
+
+/** Counts the files under `dir`, for the hand-in log. */
+function countFiles(dir: string): number {
+  let n = 0;
+  for (const entry of readdirSync(dir, { withFileTypes: true })) n += entry.isDirectory() ? countFiles(join(dir, entry.name)) : 1;
+  return n;
+}
 
 mkdirSync(out, { recursive: true });
 cpSync(join(here, 'game'), join(out, 'game'), { recursive: true });
@@ -39,3 +63,5 @@ writeFileSync(
     game_path_max_bytes: 1000,
   }),
 );
+
+console.log(`Kestrel Isles handed in to ${out}: ${countFiles(gameDir)} game files, screenshots ${shots.join(', ')} (cover ${shots[0]}), dossier.json written.`);
